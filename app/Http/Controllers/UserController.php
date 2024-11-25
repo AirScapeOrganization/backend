@@ -84,10 +84,52 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
-        //
+        
+        $validacion = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email',
+            'password' => 'required',
+            'remember_token' => 'required'
+        ]);
+    
+        if ($validacion->fails()) {
+            return response()->json([
+                'mensaje' => 'Error en la validación de datos',
+                'error' => $validacion->errors(),
+                'status' => 400
+            ]);
+        }
+    
+      
+        $user = User::find($id);
+    
+        if (!$user) {
+            return response()->json([
+                'mensaje' => 'Usuario no encontrado',
+                'status' => 404
+            ]);
+        }
+    
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->remember_token = $request->remember_token;
+    
+        if (!$user->save()) {
+            return response()->json([
+                'mensaje' => 'No se pudo actualizar el usuario',
+                'status' => 500
+            ]);
+        }
+    
+        return response()->json([
+            'mensaje' => 'Usuario actualizado correctamente',
+            'status' => 200
+        ]);
     }
+    
 
     /**
      * Update the specified resource in storage.
