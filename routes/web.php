@@ -16,6 +16,8 @@ Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
 Route::get('/listings', [ListingsController::class,  'index']);
 Route::post('/listings', [ListingsController::class,  'store']);
+Route::put('/listings/{id}', [ListingsController::class,  'edit']);
+
 
 
 
