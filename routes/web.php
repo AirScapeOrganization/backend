@@ -1,27 +1,21 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ListingsController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
-Route::apiResource('productos', UserController::class);
+// Rutas de usuarios
 Route::get('/user', [UserController::class, 'index']);
 Route::post('/user', [UserController::class, 'store']);
 Route::put('/user/{id}', [UserController::class, 'edit']);
 Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
+Route::post('/login', [AuthController::class, 'login']);
 
-
-//listings
-
-Route::get('/listings', [ListingsController::class,  'index']);
-Route::post('/listings', [ListingsController::class,  'store']);
-Route::put('/listings/{id}', [ListingsController::class,  'edit']);
-
-
-
-
-use App\Http\Controllers\AuthController;
-
-
+//Autenticación
+Route::middleware('auth.jwt')->group(function () {
+    Route::get('/listings', [ListingsController::class, 'index']);
+    Route::post('/listings', [ListingsController::class, 'store']);
+});
 

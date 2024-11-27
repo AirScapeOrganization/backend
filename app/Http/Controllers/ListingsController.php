@@ -5,87 +5,86 @@ namespace App\Http\Controllers;
 use App\Models\Listings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class ListingsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $listings = Listings::all();
         $data = [
-            'properties'=>$listings,
-            'status'=> 200,
+            'properties' => $listings,
+            'status' => 200,
         ];
 
         return response()->json($data, 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
-{
-    // Validar los datos de entrada
-    $validacion = Validator::make($request->all(), [
-        'title' => 'required|string',
-        'description' => 'required|string',
-        'address' => 'required|string',
-        'latitude' => 'required|numeric',
-        'longitude' => 'required|numeric',
-        'price_per_night' => 'required|numeric',
-        'num_bedrooms' => 'required|integer',
-        'num_bathrooms' => 'required|integer',
-        'max_guests' => 'required|integer',
-    ]);
+    {
+        $user = $request->user;
 
-    // Si la validación falla
-    if ($validacion->fails()) {
-        return response()->json([
-            'mensaje' => 'Error en la validación de datos',
-            'errores' => $validacion->errors(),
-            'status' => 400
-        ], 400);
+        if ($user->is_owner !== 1) {
+            return response()->json([
+                'message' => 'No tienes permisos para crear una propiedad'
+            ], 403);
+        }
+
+        // Validar los datos de entrada
+        $validacion = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'address' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'price_per_night' => 'required|numeric',
+            'num_bedrooms' => 'required|integer',
+            'num_bathrooms' => 'required|integer',
+            'max_guests' => 'required|integer',
+        ]);
+
+        if ($validacion->fails()) {
+            return response()->json([
+                'mensaje' => 'Error en la validación de datos',
+                'errores' => $validacion->errors(),
+                'status' => 400
+            ], 400);
+        }
+
+        // Crear el nuevo listing
+        try {
+            $listing = Listings::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'price_per_night' => $request->price_per_night,
+                'num_bedrooms' => $request->num_bedrooms,
+                'num_bathrooms' => $request->num_bathrooms,
+                'max_guests' => $request->max_guests,
+                'user_id' => $user->sub,
+            ]);
+
+            return response()->json([
+                'message' => 'Propiedad creada exitosamente',
+                'listing' => $listing
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al crear el listing',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
-
-    // Crear la propiedad
-    $listings = Listings::create([
-        'title' => $request->title,
-        'description' => $request->description,
-        'address' => $request->address,
-        'latitude' => $request->latitude,
-        'longitude' => $request->longitude,
-        'price_per_night' => $request->price_per_night,
-        'num_bedrooms' => $request->num_bedrooms,
-        'num_bathrooms' => $request->num_bathrooms,
-        'max_guests' => $request->max_guests,
-    ]);
-
-    // Verificar si la creación y guardado fueron exitosos
-    if (!$listings) {
-        return response()->json([
-            'mensaje' => 'Error al crear la propiedad',
-            'status' => 500
-        ], 500);
-    }
-
-    return response()->json([
-        'mensaje' => 'Propiedad creada correctamente',
-        'status' => 200
-    ], 200);
-}
-
-    
-    
 
 
     /**
