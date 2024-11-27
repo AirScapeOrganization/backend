@@ -16,6 +16,6 @@ Route::post('/login', [AuthController::class, 'login']);
 //Autenticación
 Route::middleware('auth.jwt')->group(function () {
     Route::get('/listings', [ListingsController::class, 'index']);
-    Route::post('/listings', [ListingsController::class, 'store']); // Ruta protegida
+    Route::post('/listings', [ListingsController::class, 'store']);
 });
 

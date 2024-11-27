@@ -17,11 +17,13 @@ class AuthController extends Controller
             $user = Auth::user();
 
             $payload = [
-                'iss' => "http://tu-app.com", // Emisor del token
-                'sub' => $user->id,          // ID del usuario autenticado
-                'iat' => time(),             // Fecha de creación
-                'exp' => time() + 60 * 60    // Expiración (1 hora)
+                'iss' => "airscape_user",
+                'sub' => $user->user_id,
+                'iat' => time(),
+                'exp' => time() + 60 * 60,  // 1 hora
+                'is_owner' => $user->is_owner
             ];
+            
 
             $jwt = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
 

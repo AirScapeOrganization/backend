@@ -54,6 +54,7 @@ class UserController extends Controller
                 'status'=> 400
             ]);
         }
+        
         $user = User::create([
             'username' => $request->username,
             'email' => $request->email,

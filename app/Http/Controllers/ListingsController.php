@@ -29,14 +29,13 @@ class ListingsController extends Controller
 
     public function store(Request $request)
     {
-        $user = $request->user; // Usuario decodificado del token
+        $user = $request->user;
 
-        if (!$user->is_owner) {
+        if ($user->is_owner !== 1) {
             return response()->json([
-                'message' => 'No tienes permisos para crear una propiedad',
+                'message' => 'No tienes permisos para crear una propiedad'
             ], 403);
         }
-
 
         // Validar los datos de entrada
         $validacion = Validator::make($request->all(), [
@@ -61,29 +60,26 @@ class ListingsController extends Controller
 
         // Crear el nuevo listing
         try {
-            $listings = Listings::create(array_merge(
-                $request->only([
-                    'title',
-                    'description',
-                    'address',
-                    'latitude',
-                    'longitude',
-                    'price_per_night',
-                    'num_bedrooms',
-                    'num_bathrooms',
-                    'max_guests'
-                ]),
-                ['user_id' => $user->id]
-            ));
+            $listing = Listings::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'price_per_night' => $request->price_per_night,
+                'num_bedrooms' => $request->num_bedrooms,
+                'num_bathrooms' => $request->num_bathrooms,
+                'max_guests' => $request->max_guests,
+                'user_id' => $user->sub,
+            ]);
 
             return response()->json([
-                'mensaje' => 'Listing creado correctamente',
-                'data' => $listings,
-                'status' => 200
-            ], 200);
+                'message' => 'Propiedad creada exitosamente',
+                'listing' => $listing
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'mensaje' => 'Error al crear el listing',
+                'message' => 'Error al crear el listing',
                 'error' => $e->getMessage(),
                 'status' => 500
             ], 500);
