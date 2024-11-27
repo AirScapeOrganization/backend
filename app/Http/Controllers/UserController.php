@@ -37,10 +37,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validacion = Validator::make($request->all(),[
-            'name' => 'required',
-            'email' => 'required',
+            'username' => 'required',
+            'email' => 'required|email',
             'password' => 'required',
-            'remember_token' => 'required'
+            'profile_picture' => 'required',
+            'bio' => 'required', 
+            'is_owner' => 'required|boolean'
            
         ]);
 
@@ -52,24 +54,16 @@ class UserController extends Controller
             ]);
         }
         $user = User::create([
-            'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'remember_token' => $request->remember_token
+            'profile_picture' => $request->profile_picture,
+            'bio'=> $request->bio,
+            'is_owner' => $request->is_owner
         ]);
         
 
-        if (!$user) {
-            return response()->json([
-                'mensaje'=> 'No se pudo crear el usuario',
-                'error'=>500
-            ]);
-        }
-
-        return response()->json([
-            'message'=> 'Se pudo crear correctamente',
-            'status'=>200
-        ]);
+        
 
     }
 
@@ -88,10 +82,12 @@ class UserController extends Controller
     {
         
         $validacion = Validator::make($request->all(), [
-            'name' => 'required',
+            'username' => 'required',
             'email' => 'required|email',
             'password' => 'required',
-            'remember_token' => 'required'
+            'profile_picture' => 'required',
+            'bio' => 'required', 
+            'is_owner' => 'required|boolean'
         ]);
     
         if ($validacion->fails()) {
@@ -101,8 +97,6 @@ class UserController extends Controller
                 'status' => 400
             ]);
         }
-    
-      
         $user = User::find($id);
     
         if (!$user) {
@@ -112,10 +106,12 @@ class UserController extends Controller
             ]);
         }
     
-        $user->name = $request->name;
+        $user->username = $request->username;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
-        $user->remember_token = $request->remember_token;
+        $user->profile_picture = $request->profile_picture;
+        $user->bio = $request->bio;
+        $user->is_owner = $request->is_owner;
     
         if (!$user->save()) {
             return response()->json([
