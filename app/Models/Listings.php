@@ -22,7 +22,7 @@ class Listings extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-      
+
         'title',
         'description',
         'address',
@@ -34,7 +34,7 @@ class Listings extends Model
         'max_guests',
         'created_at',
         'updated_at'
-      
+
     ];
 
     /**

@@ -15,7 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'user',
             'user/*',
             'listings',
-            'listings/*'
+            'listings/*',
+            'login',
+            'login/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
