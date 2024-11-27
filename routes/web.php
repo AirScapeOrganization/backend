@@ -13,10 +13,9 @@ Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// Login y autenticación
+//Autenticación
 Route::middleware('auth.jwt')->group(function () {
     Route::get('/listings', [ListingsController::class, 'index']);
     Route::post('/listings', [ListingsController::class, 'store']); // Ruta protegida
 });
 
-// Listado de propiedades (sin autenticación)
