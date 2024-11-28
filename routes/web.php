@@ -12,6 +12,7 @@ Route::post('/user', [UserController::class, 'store']);
 Route::put('/user/{id}', [UserController::class, 'edit']);
 Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
+// Ruta login
 Route::post('/login', [AuthController::class, 'login']);
 
 
@@ -21,9 +22,12 @@ Route::get('/listings/{id}', [ListingsController::class, 'show']);
 Route::post('/listings', [ListingsController::class, 'store']);
 Route::put('/listings/{id}', [ListingsController::class, 'edit']);
 
-// Ruta Reviews
+// Rutas Reviews
 Route::get('/reviews', [ReviewsController::class, 'index']);
 Route::get('/reviews/{id}', [ReviewsController::class, 'show']);
+Route::post('/reviews', [ReviewsController::class, 'store']);
+Route::put('/reviews/{id}', [ReviewsController::class, 'update']);
+Route::delete('/reviews/{id}', [ReviewsController::class, 'destroy']);
 
 //Autenticación
 Route::middleware('auth.jwt')->group(function () {
