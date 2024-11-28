@@ -64,8 +64,11 @@ class UserController extends Controller
             'is_owner' => $request->is_owner
         ]);
         
-
-        
+        return response()->json([
+            'mensaje'=>'Usuario creado con exito',
+            'user' => $user,
+            'status'=> 200
+        ], 200);     
 
     }
 

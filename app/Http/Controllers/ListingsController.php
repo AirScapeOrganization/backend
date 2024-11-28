@@ -12,14 +12,18 @@ class ListingsController extends Controller
     public function index()
     {
         $listings = Listings::all();
+
         $data = [
             'properties' => $listings,
             'status' => 200,
         ];
 
+        if ($listings->isEmpty()) {
+            return response()->json(['message' => 'No listings found'], 404);
+        }
+
         return response()->json($data, 200);
     }
-
 
     public function create()
     {
