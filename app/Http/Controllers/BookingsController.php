@@ -38,7 +38,7 @@ class BookingsController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date|after:tomorrow',
+            'start_date' => 'required|date|after:tomorrow', //fecha para que sea evaluada
             'end_date' => 'required|date|after:start_date',
             'total_price' => 'required|numeric',
             'listing_id' => 'required|integer',
