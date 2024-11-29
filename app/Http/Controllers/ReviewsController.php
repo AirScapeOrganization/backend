@@ -80,9 +80,6 @@ class ReviewsController extends Controller
 }
 
 
-
-    
-
     /**
      * Display the specified resource.
      */
