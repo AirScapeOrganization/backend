@@ -18,8 +18,7 @@ class AuthenticateJWT
         }
 
         try {
-          
-            // Decodificar el JWT
+            
             $decoded = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
 
             if (!isset($decoded->sub)) {
