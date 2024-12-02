@@ -29,6 +29,7 @@ class UserController extends Controller
      */
     public function login(Request $request)
     {
+        
     }
 
     /**
@@ -53,6 +54,7 @@ class UserController extends Controller
                 'status'=> 400
             ]);
         }
+        
         $user = User::create([
             'username' => $request->username,
             'email' => $request->email,
@@ -61,10 +63,17 @@ class UserController extends Controller
             'bio'=> $request->bio,
             'is_owner' => $request->is_owner
         ]);
-        
-
-        
-
+        if (!$user->save()) {
+            return response()->json([
+                'mensaje' => 'No se pudo crear el usuario',
+                'status' => 500
+            ]);
+        }
+    
+        return response()->json([
+            'mensaje' => 'Usuario creado correctamente',
+            'status' => 200
+        ]);
     }
 
     /**

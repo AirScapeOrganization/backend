@@ -5,39 +5,53 @@ namespace App\Http\Controllers;
 use App\Models\Listings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class ListingsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $listings = Listings::all();
         $data = [
-            'properties'=>$listings,
-            'status'=> 200,
+            'properties' => $listings,
+            'status' => 200,
         ];
 
         return response()->json($data, 200);
     }
 
+    public function show($id)
+    {
+
+        $listing = Listings::find($id);
+    
+        if (!$listing) {
+            return response()->json([
+                'mensaje' => 'Listing no encontrado',
+                'status' => 404
+            ], 404);
+        }
+        return response()->json([
+            'listing' => $listing,
+            'status' => 200
+        ], 200);
+    }
+    
+
     /**
-     * Show the form for creating a new resource.
+     * Show the form for editing the specified resource.
      */
+
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-public function store(Request $request)
-{
-    // Validar los datos de entrada
-    $validacion = Validator::make($request->all(), [
 
+    public function store(Request $request)
+{
+    
+    $listings = Validator::make($request->all(), [
         'title' => 'required|string',
         'description' => 'required|string',
         'address' => 'required|string',
@@ -49,50 +63,101 @@ public function store(Request $request)
         'max_guests' => 'required|integer',
     ]);
 
-    if ($validacion->fails()) {
+    if ($listings->fails()) {
         return response()->json([
             'mensaje' => 'Error en la validación de datos',
-            'errores' => $validacion->errors(),
+            'error' => $listings->errors(),
             'status' => 400
-        ], 400);
+        ]);
     }
 
-    // Crear el nuevo listing
-    try {
-        $listings = Listings::create($request->only([
-             'title', 'description', 'address', 'latitude',
-            'longitude', 'price_per_night', 'num_bedrooms', 'num_bathrooms', 'max_guests'
-        ]));
+    $newListing = new Listings();
+    $newListing->title = $request->title;
+    $newListing->description = $request->description;
+    $newListing->address = $request->address;
+    $newListing->latitude = $request->latitude;
+    $newListing->longitude = $request->longitude;
+    $newListing->price_per_night = $request->price_per_night;
+    $newListing->num_bedrooms = $request->num_bedrooms;
+    $newListing->num_bathrooms = $request->num_bathrooms;
+    $newListing->max_guests = $request->max_guests;
+    $newListing->user_id = $request->user_id ?? 1; 
 
+    if (!$newListing->save()) {
         return response()->json([
-            'mensaje' => 'Listing creado correctamente',
-            'status' => 200
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'mensaje' => 'Error al crear el listing',
-            'error' => $e->getMessage(),
+            'mensaje' => 'No se pudo crear la propiedad',
             'status' => 500
-        ], 500);
+        ]);
     }
+
+    return response()->json([
+        'mensaje' => 'Propiedad creada correctamente',
+        'listing' => $newListing,
+        'status' => 201
+    ]);
 }
+
+
+
 
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+   
+    public function edit(Request $request, string $id)
     {
-        //
+        $listings = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'address' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'price_per_night' => 'required|numeric',
+            'num_bedrooms' => 'required|integer',
+            'num_bathrooms' => 'required|integer',
+            'max_guests' => 'required|integer',
+        ]);
+    
+        if ($listings->fails()) {
+            return response()->json([
+                'mensaje' => 'Error en la validación de datos',
+                'error' => $listings->errors(),
+                'status' => 400
+            ]);
+        }
+        $listings = Listings::find($id);
+    
+        if (!$listings) {
+            return response()->json([
+                'mensaje' => 'Propiedad no encontrada',
+                'status' => 404
+            ]);
+        }
+        $listings->title = $request->title;
+        $listings->description = $request->description;
+        $listings->address = $request->address;
+        $listings->latitude = $request->latitude;
+        $listings->longitude = $request->longitude;
+        $listings->price_per_night = $request->price_per_night;
+        $listings->num_bedrooms = $request->num_bedrooms;
+        $listings->num_bathrooms = $request->num_bathrooms;
+        $listings->max_guests = $request->max_guests;
+    
+        if (!$listings->save()) {
+            return response()->json([
+                'mensaje' => 'No se pudo actualizar la propiedad',
+                'status' => 500
+            ]);
+        }
+    
+        return response()->json([
+            'mensaje' => 'Propiedad actualizada correctamente',
+            'status' => 200
+        ]);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+       
+    
 
     /**
      * Update the specified resource in storage.
