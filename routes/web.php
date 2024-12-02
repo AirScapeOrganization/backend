@@ -37,6 +37,7 @@ Route::get('/bookings/{id}', [BookingsController::class, 'show']);
 Route::post('/bookings', [BookingsController::class, 'store']);
 
 //  Rutas Invoices
+Route::get('/invoice', [InvoiceController::class, 'index']);
 Route::get('/invoice/{id}', [InvoiceController::class, 'show']);
 //Autenticación
 Route::middleware('auth.jwt')->group(function () {

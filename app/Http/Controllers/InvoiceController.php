@@ -12,7 +12,13 @@ class InvoiceController extends Controller
      */
     public function index()
     {
-        //
+        $Invoice = Invoices::all();
+    
+        $data = [
+            'Invoice' => $Invoice,
+            'status' => 200,
+        ];
+        return response()->json($data, 200);
     }
 
     /**
