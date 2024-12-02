@@ -21,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'reviews',
             'reviews/*',
             'bookings',
-            'bookings/*'
+            'bookings/*',
+            'invoice',
+            'invoices/*'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingsController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ListingsController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\UserController;
@@ -35,6 +36,8 @@ Route::get('/bookings', [BookingsController::class, 'index']);
 Route::get('/bookings/{id}', [BookingsController::class, 'show']);
 Route::post('/bookings', [BookingsController::class, 'store']);
 
+//  Rutas Invoices
+Route::get('/invoice/{id}', [InvoiceController::class, 'show']);
 //Autenticación
 Route::middleware('auth.jwt')->group(function () {
 
