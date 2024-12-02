@@ -12,18 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except:[
-            'user',
-            'user/*',
-            'listings',
-            'listings/*',
-            'login',
-            'login/*',
-            'reviews',
-            'reviews/*',
-            'bookings',
-            'bookings/*',
-            'invoice',
-            'invoices/*'
+            '/*'
+
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

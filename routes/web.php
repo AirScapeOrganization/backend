@@ -6,10 +6,11 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ListingsController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\AuthenticateJWT;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de usuarios
-Route::get('/user', [UserController::class, 'index']);
+
 Route::post('/user', [UserController::class, 'store']);
 Route::put('/user/{id}', [UserController::class, 'edit']);
 Route::delete('/user/{id}', [UserController::class, 'destroy']);
@@ -42,8 +43,9 @@ Route::get('/invoice/{id}', [InvoiceController::class, 'show']);
 Route::post('invoice', [InvoiceController::class, 'store']);
 
 //Autenticación
-Route::middleware('auth.jwt')->group(function () {
+Route::middleware([AuthenticateJWT::class])->group(function () {
 
-    
+    Route::get('/user', [UserController::class, 'index']);
+
 });
 
