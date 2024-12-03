@@ -36,10 +36,11 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::get('/check-email/{email}', [UserController::class, 'checkEmail']);
 
     // Listings
-    Route::post('/listings', [ListingsController::class, 'store']);
     Route::get('/listings/{id}', [ListingsController::class, 'show']);
     Route::put('/listings/{id}', [ListingsController::class, 'edit']);
 });
+
+Route::post('/listings', [ListingsController::class, 'store']);
 
 
 // Rutas Reviews

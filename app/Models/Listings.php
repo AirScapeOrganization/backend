@@ -49,4 +49,9 @@ class Listings extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function photos()
+    {
+    return $this->hasMany(Photos::class, 'listing_id'); 
+    }
+
 }
