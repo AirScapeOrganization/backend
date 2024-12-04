@@ -96,11 +96,11 @@ class ListingsController extends Controller
             'mensaje' => 'Propiedad creada correctamente',
             'listing' => $newListing,
             'photo' => $photo,
-            'status' => 201
+            'status' => 200
         ]);
     }
 
-
+    
 
 
 
