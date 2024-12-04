@@ -41,6 +41,7 @@ class SupabaseService
             $response = $this->client->request('POST', "object/{$this->bucket}/$uniqueFileName", [
                 'headers' => [
                     'Content-Type' => $file->getMimeType() ?? 'application/octet-stream',
+                    'Authorization' => 'Bearer ' . env('SUPABASE_KEY')
                 ],
                 'body' => $fileContent,
             ]);
@@ -50,6 +51,9 @@ class SupabaseService
             }
         } catch (\Exception $e) {
             Log::error('Error uploading to Supabase: ' . $e->getMessage());
+            if ($e->hasResponse()) {
+                Log::error('Response body: ' . $e->getResponse()->getBody()->getContents());
+            }
             return null;
         }
 

@@ -53,7 +53,7 @@ class ListingsController extends Controller
         'num_bedrooms' => 'required|integer',
         'num_bathrooms' => 'required|integer',
         'max_guests' => 'required|integer',
-        'photo_url' => 'required|file', // Verifica que el archivo esté incluido en la solicitud
+        'photo_url' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     if ($validator->fails()) {
