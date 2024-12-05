@@ -24,6 +24,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware([AuthenticateJWT::class])->group(function () {
     //Users
     Route::get('/user', [UserController::class, 'index']);
+    Route::get('/user/{user_id}', [UserController::class, 'showUser']);
     
     Route::put('/user/{id}', [UserController::class, 'edit']);
 
@@ -36,12 +37,10 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::get('/check-email/{email}', [UserController::class, 'checkEmail']);
 
     // Listings
-    Route::get('/listings/{id}', [ListingsController::class, 'show']);
+    Route::post('/listings', [ListingsController::class, 'store']);
+    // Route::get('/listings/{id}', [ListingsController::class, 'show']); No existe
     Route::put('/listings/{id}', [ListingsController::class, 'edit']);
 });
-
-Route::post('/listings', [ListingsController::class, 'store']);
-
 
 // Rutas Reviews
 Route::get('/reviews', [ReviewsController::class, 'index']);

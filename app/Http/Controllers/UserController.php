@@ -75,6 +75,21 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function showUser($user_id){
+        $user = User::find($user_id);
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        return response()->json([
+            'user_id' => $user->user_id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $user->is_owner ? 'Owner' : 'Tenant',
+        ]);
+    }
+ 
     /**
      * Display the specified resource.
      */

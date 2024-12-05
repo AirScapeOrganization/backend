@@ -35,54 +35,29 @@ class ListingsController extends Controller
         return response()->json($data, 200);
     }
 
-    public function create()
-    {
-        //
-    }
-
     public function store(Request $request)
-{
-    // Validación de los datos de entrada
-    $validator = Validator::make($request->all(), [
-        'title' => 'required|string',
-        'description' => 'required|string',
-        'address' => 'required|string',
-        'latitude' => 'required|numeric',
-        'longitude' => 'required|numeric',
-        'price_per_night' => 'required|numeric',
-        'num_bedrooms' => 'required|integer',
-        'num_bathrooms' => 'required|integer',
-        'max_guests' => 'required|integer',
-        'photo_url' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+    {
 
-    if ($validator->fails()) {
-        return response()->json([
-            'mensaje' => 'Error en la validación de datos',
-            'error' => $validator->errors(),
-            'status' => 400,
-        ], 400);
-    }
+        $listings = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'address' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'price_per_night' => 'required|numeric',
+            'num_bedrooms' => 'required|integer',
+            'num_bathrooms' => 'required|integer',
+            'max_guests' => 'required|integer',
+        ]);
 
-    // Subir la imagen a Supabase
-    try {
-        $uploadedUrl = $this->supabase->uploadImage($request->file('photo_url'));
-
-        if (!$uploadedUrl) {
+        if ($listings->fails()) {
             return response()->json([
-                'mensaje' => 'Error al subir la imagen a Supabase',
-                'status' => 500
-            ], 500);
+                'mensaje' => 'Error en la validación de datos',
+                'error' => $listings->errors(),
+                'status' => 400
+            ]);
         }
-    } catch (\Exception $e) {
-        return response()->json([
-            'mensaje' => 'Error durante la subida de la imagen: ' . $e->getMessage(),
-            'status' => 500
-        ], 500);
-    }
 
-    try {
-        // Crear el nuevo listing
         $newListing = new Listings();
         $newListing->title = $request->title;
         $newListing->description = $request->description;
@@ -93,39 +68,22 @@ class ListingsController extends Controller
         $newListing->num_bedrooms = $request->num_bedrooms;
         $newListing->num_bathrooms = $request->num_bathrooms;
         $newListing->max_guests = $request->max_guests;
-        $newListing->user_id = $request->user_id ?? 1;  // Valor por defecto si no se pasa user_id
-        $newListing->created_at = now();
+        $newListing->user_id = $request->user_id ?? 1;
 
-        $newListing->save();
-
-        // Crear foto para el nuevo listing, asociando la URL de la imagen subida
-        $photo = new Photos();
-        $photo->listing_id = $newListing->listing_id;  
-        $photo->photo_url = $uploadedUrl; // URL de la imagen de Supabase
-        $photo->created_at = now();
-
-        $photo->save();
+        if (!$newListing->save()) {
+            return response()->json([
+                'mensaje' => 'No se pudo crear la propiedad',
+                'status' => 500
+            ]);
+        }
 
         return response()->json([
             'mensaje' => 'Propiedad creada correctamente',
             'listing' => $newListing,
-            'photo' => $photo,
-            'status' => 200
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'mensaje' => 'Hubo un error al crear la propiedad o al guardar la foto: ' . $e->getMessage(),
-            'status' => 500
-        ], 500);
+            'status' => 201
+        ]);
     }
-}
 
-
-    /**
-     * Display the specified resource.
-     */
-   
     public function edit(Request $request, string $id)
     {
         $listings = Validator::make($request->all(), [
@@ -139,7 +97,7 @@ class ListingsController extends Controller
             'num_bathrooms' => 'required|integer',
             'max_guests' => 'required|integer',
         ]);
-    
+
         if ($listings->fails()) {
             return response()->json([
                 'mensaje' => 'Error en la validación de datos',
@@ -148,7 +106,7 @@ class ListingsController extends Controller
             ]);
         }
         $listings = Listings::find($id);
-    
+
         if (!$listings) {
             return response()->json([
                 'mensaje' => 'Propiedad no encontrada',
@@ -164,25 +122,20 @@ class ListingsController extends Controller
         $listings->num_bedrooms = $request->num_bedrooms;
         $listings->num_bathrooms = $request->num_bathrooms;
         $listings->max_guests = $request->max_guests;
-    
+
         if (!$listings->save()) {
             return response()->json([
                 'mensaje' => 'No se pudo actualizar la propiedad',
                 'status' => 500
             ]);
         }
-    
+
         return response()->json([
             'mensaje' => 'Propiedad actualizada correctamente',
             'status' => 200
         ]);
     }
-       
-    
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         //
