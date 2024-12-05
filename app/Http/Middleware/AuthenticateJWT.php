@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class AuthenticateJWT
 {
     public function handle(Request $request, Closure $next) {
-        $token = $request->bearerToken(); // Obtener el token del encabezado Authorization
+        $token = $request->bearerToken();
 
         if (!$token) {
             return response()->json(['message' => 'Token no proporcionado'], 401);
