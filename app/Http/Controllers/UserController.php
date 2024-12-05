@@ -89,7 +89,7 @@ class UserController extends Controller
             'role' => $user->is_owner ? 'Owner' : 'Tenant',
         ]);
     }
-
+ 
     /**
      * Display the specified resource.
      */
