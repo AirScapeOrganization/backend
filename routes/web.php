@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ListingsController;
+use App\Http\Controllers\PhotosController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AuthenticateJWT;
@@ -38,8 +39,11 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
 
     // Listings
     Route::post('/listings', [ListingsController::class, 'store']);
-    // Route::get('/listings/{id}', [ListingsController::class, 'show']); No existe
+
+    Route::get('/listings/{id}', [ListingsController::class, 'show']);
+
     Route::put('/listings/{id}', [ListingsController::class, 'edit']);
+    
 });
 
 
@@ -60,3 +64,4 @@ Route::post('/bookings', [BookingsController::class, 'store']);
 Route::get('/invoice/{id}', [InvoiceController::class, 'show']);
 Route::post('invoice', [InvoiceController::class, 'store']);
 
+Route::post('/photos', [PhotosController::class, 'store']);
