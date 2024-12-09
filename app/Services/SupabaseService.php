@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-
 
 class SupabaseService
 {
@@ -18,45 +16,54 @@ class SupabaseService
             'base_uri' => env('SUPABASE_URL') . '/storage/v1/',
             'headers' => [
                 'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
-                'Content-Type' => 'application/json',
             ],
         ]);
 
-        $this->bucket = env('SUPABASE_BUCKET', 'default-bucket');
+        $this->bucket = env('SUPABASE_BUCKET', 'photos');
     }
 
-    public function uploadImage($file, $customFileName = null)
+    public function uploadImage($file)
     {
         try {
-            if (is_string($file)) {
-                $fileContent = Storage::get($file);
-                $fileName = $customFileName ?? basename($file);
+            if ($file instanceof \Illuminate\Http\UploadedFile) {
+                $fileContent = file_get_contents($file->getRealPath());
+                $fileName = uniqid() . '-' . $file->getClientOriginalName();
+                $mimeType = $file->getMimeType();
             } else {
-                $fileContent = file_get_contents($file->getPathname());
-                $fileName = $customFileName ?? $file->getClientOriginalName();
+                throw new \Exception('Formato de archivo no soportado.');
             }
 
-            $uniqueFileName = uniqid() . '-' . $fileName;
+            Log::info('Archivo a subir:', [
+                'filename' => $fileName,
+                'mime_type' => $mimeType,
+                'bucket' => $this->bucket,
+            ]);
 
-            $response = $this->client->request('POST', "object/{$this->bucket}/$uniqueFileName", [
+
+            $response = $this->client->request('POST', "object/{$this->bucket}/{$fileName}", [
                 'headers' => [
-                    'Content-Type' => $file->getMimeType() ?? 'application/octet-stream',
-                    'Authorization' => 'Bearer ' . env('SUPABASE_KEY')
+                    'Content-Type' => $mimeType ?? 'application/octet-stream',
                 ],
                 'body' => $fileContent,
             ]);
 
-            if ($response->getStatusCode() === 200) {
-                return env('SUPABASE_URL') . '/storage/v1/object/public/' . $this->bucket . '/' . $uniqueFileName;
+
+            Log::info('Respuesta de Supabase:', [
+                'status_code' => $response->getStatusCode(),
+                'body' => $response->getBody()->getContents(),
+            ]);
+
+
+            if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
+                $uploadedUrl = env('SUPABASE_URL') . "/storage/v1/object/public/{$this->bucket}/{$fileName}";
+                return $uploadedUrl;
+            } else {
+                Log::error('Error al subir a Supabase: ' . $response->getBody()->getContents());
+                return null;
             }
         } catch (\Exception $e) {
-            Log::error('Error uploading to Supabase: ' . $e->getMessage());
-            if ($e->hasResponse()) {
-                Log::error('Response body: ' . $e->getResponse()->getBody()->getContents());
-            }
+            Log::error('Error al subir a Supabase: ' . $e->getMessage());
             return null;
         }
-
-        return null;
     }
 }

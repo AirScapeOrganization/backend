@@ -12,6 +12,8 @@ class Listings extends Model
 
     protected $primaryKey = 'listing_id';
 
+    public $timestamps = true;
+
     protected $fillable = [
         'user_id',
         'title',
@@ -24,8 +26,10 @@ class Listings extends Model
         'num_bathrooms',
         'max_guests',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'photo_url'
     ];
+
 
     protected $hidden = [
         'user_id',
@@ -49,9 +53,14 @@ class Listings extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function photos()
+
+    public function mainPhoto()
     {
-    return $this->hasMany(Photos::class, 'listing_id'); 
+        return $this->hasOne(Photo::class, 'listing_id')->oldest('photo_id');
     }
 
+    public function photos()
+    {
+        return $this->hasMany(Photo::class, 'listing_id'); // Asegúrate de que la relación esté correctamente configurada
+    }
 }
