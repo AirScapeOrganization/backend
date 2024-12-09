@@ -18,10 +18,12 @@ class AuthController extends Controller
 
             $payload = [
                 'iss' => "airscape_user",
+                "role" => "authenticated",
+                "ref" => "owginxrurpipnipdwiwr",
                 'sub' => $user->user_id,
+                'is_owner' => $user->is_owner,
                 'iat' => time(),
                 'exp' => time() + 60 * 60,  // 1 hora
-                'is_owner' => $user->is_owner
             ];
             
 
