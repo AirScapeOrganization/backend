@@ -23,20 +23,19 @@ class AuthController extends Controller
                 'sub' => $user->user_id,
                 'is_owner' => $user->is_owner,
                 'iat' => time(),
-                'exp' => time() + 60 * 60,  // 1 hora
+                'exp' => time() + 60 * 60,
             ];
             
 
             $jwt = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
 
             return response()->json([
-                'message' => 'Inicio de sesión exitoso',
+                'message' => 'Successful login',
                 'token' => $jwt,
-                'user' => $user,
             ], 200);
         }
 
-        return response()->json(['message' => 'Credenciales incorrectas'], 401);
+        return response()->json(['message' => 'Incorrect credentials'], 401);
     }
 }
 

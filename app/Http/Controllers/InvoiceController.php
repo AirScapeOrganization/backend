@@ -8,43 +8,19 @@ use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //$Invoice = Invoices::all();
-    
-        //$data = [
-          //  'Invoice' => $Invoice,
-            //'status' => 200,
-        //];
-        //return response()->json($data, 200);
-    }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $Invoice = Validator::make($request->all(), [
-            'date' => 'required|date', 
-            'time' => 'required|date_format:H:i',  
-            'tax_price' => 'required|numeric',  
-            'price_gross' => 'required|numeric',  
-            'price_net' => 'required|numeric',  
+            'date' => 'required|date',
+            'time' => 'required|date_format:H:i',
+            'tax_price' => 'required|numeric',
+            'price_gross' => 'required|numeric',
+            'price_net' => 'required|numeric',
         ]);
-        
 
-        if ($Invoice->fails()){
+
+        if ($Invoice->fails()) {
             return response()->json([
                 'mensaje' => 'Error en la validación de datos',
                 'error' => $Invoice->errors(),
@@ -55,7 +31,7 @@ class InvoiceController extends Controller
         $newInvoice->date = $request->date;
         $newInvoice->time = $request->time;
         $newInvoice->tax_price = $request->tax_price;
-        $newInvoice->price_gross = $request->price_gross;       
+        $newInvoice->price_gross = $request->price_gross;
         $newInvoice->price_net = $request->price_net;
         $newInvoice->booking_id = $request->booking_id ?? 1;
 
@@ -72,46 +48,25 @@ class InvoiceController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+
+    public function show(Request $request, $id)
     {
-        $Invoice = Invoices::find($id);
-   
-        if (!$Invoice) {
-            return response()->json([
-                'message' => 'Invoice not found',
-                'status' => 404,
-            ], 404);
-        }
-        return response()->json([
-            'Factura' => $Invoice,
+        $user = $request->user();
+
+        $invoicesUser = Invoices::where('user_id', $user->user_id)->get();
+
+        $data = [
+            'invoices' => $invoicesUser,
             'status' => 200,
-        ], 200);
+        ];
+
+        return response()->json($data, 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+    public function edit(string $id) {}
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    public function update(Request $request, string $id) {}
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+
+    public function destroy(string $id) {}
 }

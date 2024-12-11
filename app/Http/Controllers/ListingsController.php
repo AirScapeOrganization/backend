@@ -8,7 +8,6 @@ use App\Models\Photo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 
 class ListingsController extends Controller
 {
@@ -48,14 +47,13 @@ class ListingsController extends Controller
         return response()->json(['properties' => $formattedListings, 'status' => 200]);
     }
 
-
     public function store(Request $request)
     {
         $user = $request->user();
 
         if ($user->is_owner !== 1) {
             return response()->json([
-                'message' => 'No tienes permisos para crear una propiedad'
+                'message' => 'You do not have permissions to create a property'
             ], 403);
         }
 
@@ -70,12 +68,12 @@ class ListingsController extends Controller
             'num_bathrooms' => 'required|integer',
             'max_guests' => 'required|integer',
             'photos' => 'required|array',
-            'photos.*' => 'file|mimes:jpg,jpeg,png',
+            'photos.*' => 'file|mimes:jpg,jpeg,png,webp',
         ]);
 
         if ($validated->fails()) {
             return response()->json([
-                'message' => 'Error en la validación de datos',
+                'message' => 'Data validation error',
                 'errors' => $validated->errors(),
                 'status' => 400
             ], 400);
@@ -99,16 +97,16 @@ class ListingsController extends Controller
             ]);
 
             if (!$listing->listing_id) {
-                throw new \Exception("No se pudo obtener el ID de la propiedad.");
+                throw new \Exception("Could not get property ID");
             }
 
             $uploadedUrls = [];
 
             foreach ($request->file('photos') as $photo) {
-                $uploadedUrl = $this->supabase->uploadImage($photo);
+                $uploadedUrl = $this->supabase->uploadImage($photo, $user->user_id, $listing->listing_id);
 
                 if (!$uploadedUrl) {
-                    throw new \Exception("Error al subir una de las imágenes.");
+                    throw new \Exception("Error uploading one of the images");
                 }
 
                 DB::table('photos')->insert([
@@ -124,7 +122,7 @@ class ListingsController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Propiedad creada exitosamente',
+                'message' => 'Property created successfully',
                 'listing' => $listing,
                 'photos' => $uploadedUrls,
             ], 201);
@@ -132,13 +130,12 @@ class ListingsController extends Controller
             DB::rollBack();
 
             return response()->json([
-                'message' => 'Error al crear la propiedad',
+                'message' => 'Error creating property',
                 'error' => $e->getMessage(),
                 'status' => 500
             ], 500);
         }
     }
-
 
     public function show($id)
     {
@@ -147,6 +144,11 @@ class ListingsController extends Controller
         if (!$listing) {
             return response()->json(['message' => 'Listing not found'], 404);
         }
+        
+        $photos = $listing->photos->map(function ($photo) {
+            unset($photo->listing_id, $photo->created_at, $photo->updated_at);
+            return $photo;
+        });
 
         return response()->json([
             'listing' => [
@@ -161,13 +163,11 @@ class ListingsController extends Controller
                 'num_bathrooms' => $listing->num_bathrooms,
                 'max_guests' => $listing->max_guests,
                 'user_id' => $listing->user_id,
+                'photos' => $photos,   
             ],
-            'photos' => $listing->photos,
         ], 200);
+
     }
-
-
-
 
     public function edit(Request $request, string $id)
     {
@@ -185,7 +185,7 @@ class ListingsController extends Controller
 
         if ($listings->fails()) {
             return response()->json([
-                'mensaje' => 'Error en la validación de datos',
+                'mensaje' => 'Data validation error',
                 'error' => $listings->errors(),
                 'status' => 400
             ]);
@@ -195,7 +195,7 @@ class ListingsController extends Controller
 
         if (!$listing) {
             return response()->json([
-                'mensaje' => 'Propiedad no encontrada',
+                'mensaje' => 'Property not found',
                 'status' => 404
             ]);
         }
@@ -212,13 +212,13 @@ class ListingsController extends Controller
 
         if (!$listing->save()) {
             return response()->json([
-                'mensaje' => 'No se pudo actualizar la propiedad',
+                'mensaje' => 'Could not update property',
                 'status' => 500
             ]);
         }
 
         return response()->json([
-            'mensaje' => 'Propiedad actualizada correctamente',
+            'mensaje' => 'Property updated successfully',
             'status' => 200
         ]);
     }

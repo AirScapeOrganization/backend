@@ -61,6 +61,6 @@ class Listings extends Model
 
     public function photos()
     {
-        return $this->hasMany(Photo::class, 'listing_id'); // Asegúrate de que la relación esté correctamente configurada
+        return $this->hasMany(Photo::class, 'listing_id');
     }
 }
