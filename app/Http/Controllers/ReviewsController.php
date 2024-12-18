@@ -6,10 +6,9 @@ use App\Models\Reviews;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-
-
 class ReviewsController extends Controller
 {
+
     public function index()
     {
         $allReviews = Reviews::all();
@@ -22,7 +21,6 @@ class ReviewsController extends Controller
 
     public function store(Request $request)
     {
-
         $userInfo = $request->user();
         $user_id = $userInfo->user_id;
 

@@ -10,7 +10,7 @@ class Bookings extends Model
     use HasFactory;
 
     protected $primaryKey = 'booking_id';
-    public $timestamps = true; 
+    public $timestamps = true;
 
     protected $fillable = [
         'listing_id',

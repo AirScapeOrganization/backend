@@ -43,7 +43,7 @@ class BookingsController extends Controller
                 'status' => 500
             ]);
         }
-    
+
         return response()->json([
             'mensaje' => 'Reservation created successfully',
             'booking' => $newBooking,
@@ -56,8 +56,8 @@ class BookingsController extends Controller
         $userId = $request->user()->user_id;
 
         $bookings = Bookings::with('listing')
-        ->where('user_id', $userId)
-        ->get();
+            ->where('user_id', $userId)
+            ->get();
 
         if ($bookings->isEmpty()) {
             return response()->json(['message' => 'No bookings found for this user'], 404);

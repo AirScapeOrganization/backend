@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Messages extends Model
 {
-    use HasFactory; 
+    use HasFactory;
 
     protected $primary_key = 'message_id';
 
@@ -23,7 +23,5 @@ class Messages extends Model
         'listing_id',
     ];
 
-    protected $casts = [
-        
-    ];
+    protected $casts = [];
 }

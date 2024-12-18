@@ -9,7 +9,6 @@ class Listings extends Model
 {
     use HasFactory;
 
-
     protected $primaryKey = 'listing_id';
 
     public $timestamps = true;

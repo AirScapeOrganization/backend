@@ -6,69 +6,57 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-
     public function index()
     {
         $allUsers = User::all();
-        $data = [
+        return response()->json([
             'users' => $allUsers,
             'status' => 200,
-        ];
-
-        return response()->json($data, 200);
+        ], 200);
     }
 
     public function store(Request $request)
     {
-        $validated = Validator::make($request->all(), [
-            'username' => 'required',
-            'email' => 'required|email',
-            'password' => 'required',
-            'profile_picture' => 'required',
-            'bio' => 'required',
-            'is_owner' => 'required|boolean'
-
+        $validated = $request->validate([
+            'username' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'profile_picture' => 'nullable|string',
+            'bio' => 'nullable|string',
+            'is_owner' => 'nullable|boolean',
         ]);
 
-        if ($validated->fails()) {
-            return response()->json([
-                'mensaje' => 'Data validation error',
-                'error' => $validated->errors(),
-                'status' => 400
-            ], 400);
-        }
-
         $user = User::create([
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'profile_picture' => $request->profile_picture,
-            'bio' => $request->bio,
-            'is_owner' => $request->is_owner
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'profile_picture' => $validated['profile_picture'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+            'is_owner' => $validated['is_owner'] ?? false,
         ]);
 
         $payload = [
             'iss' => "airscape_user",
-            'sub' => $user->user_id,
+            'sub' => $user->id,
             'iat' => time(),
-            'exp' => time() + 60 * 60,  // 1 hour
-            'is_owner' => $user->is_owner
+            'exp' => time() + 60 * 60, // 1 hour
+            'is_owner' => $user->is_owner,
         ];
 
         $jwt = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
 
         return response()->json([
-            'mensaje' => 'User created successfullyy',
+            'mensaje' => 'User created successfully',
             'token' => $jwt,
-            'status' => 200
+            'status' => 200,
         ], 200);
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $user = User::find($id);
 
         if (!$user) {
@@ -79,79 +67,74 @@ class UserController extends Controller
             'user_id' => $user->user_id,
             'username' => $user->username,
             'email' => $user->email,
+            'bio' => $user->bio,
+            'profile_picture' => $user->profile_picture,
             'role' => $user->is_owner ? 'Owner' : 'Tenant',
         ]);
     }
- 
 
     public function edit(Request $request, $id)
     {
-
-        $validated = Validator::make($request->all(), [
-            'username' => 'required',
-            'email' => 'required|email',
-            'password' => 'required',
-            'profile_picture' => 'required',
-            'bio' => 'required',
-        ]);
-
-        if ($validated->fails()) {
-            return response()->json([
-                'mensaje' => 'Data validation error',
-                'error' => $validated->errors(),
-                'status' => 400
-            ]);
-        }
         $user = User::find($id);
 
         if (!$user) {
             return response()->json([
                 'mensaje' => 'User not found',
-                'status' => 404
+                'status' => 404,
             ]);
         }
 
-        $user->username = $request->username;
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
-        $user->profile_picture = $request->profile_picture;
-        $user->bio = $request->bio;
+        $validated = $request->validate([
+            'username' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->user_id . ',user_id', // Cambiar `id` por `user_id`
+            'password' => 'nullable|string|min:6',
+            'profile_picture' => 'nullable|string',
+            'bio' => 'nullable|string',
+        ]);
+
+        $user->username = $validated['username'];
+        $user->email = $validated['email'];
+        if (isset($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+        $user->profile_picture = $validated['profile_picture'] ?? $user->profile_picture;
+        $user->bio = $validated['bio'] ?? $user->bio;
 
         if (!$user->save()) {
             return response()->json([
                 'mensaje' => 'Failed to update user',
-                'status' => 500
+                'status' => 500,
             ]);
         }
 
         return response()->json([
             'mensaje' => 'User successfully updated',
-            'status' => 200
+            'status' => 200,
         ]);
     }
 
-    public function destroy(string $id)
-    {
 
+    public function destroy($id)
+    {
         $user = User::find($id);
 
         if (!$user) {
             return response()->json([
                 'mensaje' => 'User not found',
-                'status' => 404
+                'status' => 404,
             ]);
         }
 
         if (!$user->delete()) {
             return response()->json([
                 'mensaje' => 'Could not delete user',
-                'status' => 500
+                'status' => 500,
             ]);
         }
 
         return response()->json([
             'mensaje' => 'User deleted successfully',
-            'status' => 200
+            'status' => 200,
         ]);
     }
 }

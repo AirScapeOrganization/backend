@@ -25,7 +25,7 @@ class AuthController extends Controller
                 'iat' => time(),
                 'exp' => time() + 60 * 60,
             ];
-            
+
 
             $jwt = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
 
@@ -38,4 +38,3 @@ class AuthController extends Controller
         return response()->json(['message' => 'Incorrect credentials'], 401);
     }
 }
-

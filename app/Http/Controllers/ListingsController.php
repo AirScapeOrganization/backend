@@ -20,7 +20,6 @@ class ListingsController extends Controller
 
     public function index()
     {
-
         $listings = Listings::with('mainPhoto')->get();
 
         if ($listings->isEmpty()) {
@@ -144,7 +143,7 @@ class ListingsController extends Controller
         if (!$listing) {
             return response()->json(['message' => 'Listing not found'], 404);
         }
-        
+
         $photos = $listing->photos->map(function ($photo) {
             unset($photo->listing_id, $photo->created_at, $photo->updated_at);
             return $photo;
@@ -163,10 +162,9 @@ class ListingsController extends Controller
                 'num_bathrooms' => $listing->num_bathrooms,
                 'max_guests' => $listing->max_guests,
                 'user_id' => $listing->user_id,
-                'photos' => $photos,   
+                'photos' => $photos,
             ],
         ], 200);
-
     }
 
     public function edit(Request $request, string $id)
