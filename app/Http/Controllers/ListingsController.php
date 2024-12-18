@@ -150,20 +150,18 @@ class ListingsController extends Controller
         });
 
         return response()->json([
-            'listing' => [
-                'id' => $listing->listing_id,
-                'title' => $listing->title,
-                'description' => $listing->description,
-                'address' => $listing->address,
-                'latitude' => $listing->latitude,
-                'longitude' => $listing->longitude,
-                'price_per_night' => $listing->price_per_night,
-                'num_bedrooms' => $listing->num_bedrooms,
-                'num_bathrooms' => $listing->num_bathrooms,
-                'max_guests' => $listing->max_guests,
-                'user_id' => $listing->user_id,
-                'photos' => $photos,
-            ],
+            'id' => $listing->listing_id,
+            'title' => $listing->title,
+            'description' => $listing->description,
+            'address' => $listing->address,
+            'latitude' => $listing->latitude,
+            'longitude' => $listing->longitude,
+            'price_per_night' => $listing->price_per_night,
+            'num_bedrooms' => $listing->num_bedrooms,
+            'num_bathrooms' => $listing->num_bathrooms,
+            'max_guests' => $listing->max_guests,
+            'user_id' => $listing->user_id,
+            'photos' => $photos,
         ], 200);
     }
 
