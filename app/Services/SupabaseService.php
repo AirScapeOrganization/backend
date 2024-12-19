@@ -22,37 +22,36 @@ class SupabaseService
         $this->bucket = env('SUPABASE_BUCKET', 'photos');
     }
 
-    public function uploadSingleImage($file, $user_id, $property_id)
-{
-    try {
-        if ($file instanceof \Illuminate\Http\UploadedFile) {
-            $fileContent = file_get_contents($file->getRealPath());
-            $fileName = uniqid() . '-' . $file->getClientOriginalName();
-            $mimeType = $file->getMimeType();
-        } else {
-            throw new \Exception('Formato de archivo no soportado.');
-        }
+    public function uploadSingleImage($file, $user_id)
+    {
+        try {
+            if ($file instanceof \Illuminate\Http\UploadedFile) {
+                $fileContent = file_get_contents($file->getRealPath());
+                $fileName = uniqid() . '-' . $file->getClientOriginalName();
+                $mimeType = $file->getMimeType();
+            } else {
+                throw new \Exception('Formato de archivo no soportado.');
+            }
 
-        $filePath = "folder_user_{$user_id}/property_{$property_id}/{$fileName}";
+            $filePath = "folder_user_{$user_id}/{$fileName}";
 
-        $response = $this->client->request('POST', "object/{$this->bucket}/{$filePath}", [
-            'headers' => [
-                'Content-Type' => $mimeType ?? 'application/octet-stream',
-            ],
-            'body' => $fileContent,
-        ]);
+            $response = $this->client->request('POST', "object/{$this->bucket}/{$filePath}", [
+                'headers' => [
+                    'Content-Type' => $mimeType ?? 'application/octet-stream',
+                ],
+                'body' => $fileContent,
+            ]);
 
-        if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
-            $uploadedUrl = env('SUPABASE_URL') . "/storage/v1/object/public/{$this->bucket}/{$filePath}";
-            return $uploadedUrl;
-        } else {
-            Log::error('Error al subir a Supabase: ' . $response->getBody()->getContents());
+            if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
+                $uploadedUrl = env('SUPABASE_URL') . "/storage/v1/object/public/{$this->bucket}/{$filePath}";
+                return $uploadedUrl;
+            } else {
+                Log::error('Error al subir a Supabase: ' . $response->getBody()->getContents());
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al subir a Supabase: ' . $e->getMessage());
             return null;
         }
-    } catch (\Exception $e) {
-        Log::error('Error al subir a Supabase: ' . $e->getMessage());
-        return null;
     }
-}
-
 }

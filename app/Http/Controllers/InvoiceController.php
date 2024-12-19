@@ -19,7 +19,6 @@ class InvoiceController extends Controller
             'price_net' => 'required|numeric',
         ]);
 
-
         if ($Invoice->fails()) {
             return response()->json([
                 'mensaje' => 'Error en la validación de datos',
@@ -27,6 +26,7 @@ class InvoiceController extends Controller
                 'status' => 400
             ]);
         }
+
         $newInvoice = new Invoices();
         $newInvoice->date = $request->date;
         $newInvoice->time = $request->time;
@@ -43,7 +43,6 @@ class InvoiceController extends Controller
         }
         return response()->json([
             'mensaje' => 'Factura creada correctamente',
-            //'invoice' => $newInvoice,
             'status' => 201
         ]);
     }

@@ -62,8 +62,6 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
-
-
         
         return response()->json([
             'user_id' => $user->user_id,
@@ -88,7 +86,7 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'username' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->user_id . ',user_id', // Cambiar `id` por `user_id`
+            'email' => 'required|email|unique:users,email,' . $user->user_id . ',user_id',
             'password' => 'nullable|string|min:6',
             'profile_picture' => 'nullable|string',
             'bio' => 'nullable|string',
@@ -99,6 +97,7 @@ class UserController extends Controller
         if (isset($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
+        
         $user->profile_picture = $validated['profile_picture'] ?? $user->profile_picture;
         $user->bio = $validated['bio'] ?? $user->bio;
 
@@ -114,7 +113,6 @@ class UserController extends Controller
             'status' => 200,
         ]);
     }
-
 
     public function destroy($id)
     {

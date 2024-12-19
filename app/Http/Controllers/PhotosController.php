@@ -23,7 +23,6 @@ class PhotosController extends Controller
     {
 
         $validated = Validator::make($request->all(), [
-            'listing_id' => 'required|integer',
             'photo' => 'required|file|mimes:jpg,jpeg,png,webp',
         ]);
 
@@ -44,11 +43,10 @@ class PhotosController extends Controller
             ], 401);
         }
 
-        $listingId = $request->input('listing_id');
         $photo = $request->file('photo');
 
         try {
-            $uploadedUrl = $this->supabase->uploadSingleImage($photo, $userId, $listingId);
+            $uploadedUrl = $this->supabase->uploadSingleImage($photo, $userId);
 
             if (!$uploadedUrl) {
                 throw new \Exception("Error uploading the image");
