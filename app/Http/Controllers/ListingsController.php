@@ -50,95 +50,95 @@ class ListingsController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        $user = $request->user();
+        public function store(Request $request)
+        {
+            $user = $request->user();
 
-        if ($user->is_owner !== 1) {
-            return response()->json([
-                'message' => 'No tienes permisos para crear una propiedad'
-            ], 403);
-        }
+            if ($user->is_owner !== 1) {
+                return response()->json([
+                    'message' => 'No tienes permisos para crear una propiedad'
+                ], 403);
+            }
 
-        $validated = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'address' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'price_per_night' => 'required|numeric',
-            'num_bedrooms' => 'required|integer',
-            'num_bathrooms' => 'required|integer',
-            'max_guests' => 'required|integer',
-            'photos' => 'required|array',
-            'photos.*' => 'file|mimes:jpg,jpeg,png',
-        ]);
-
-        if ($validated->fails()) {
-            return response()->json([
-                'message' => 'Error en la validación de datos',
-                'errors' => $validated->errors(),
-                'status' => 400
-            ], 400);
-        }
-
-        DB::beginTransaction();
-
-        try {
-
-            $listing = Listings::create([
-                'title' => $request->title,
-                'description' => $request->description,
-                'address' => $request->address,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'price_per_night' => $request->price_per_night,
-                'num_bedrooms' => $request->num_bedrooms,
-                'num_bathrooms' => $request->num_bathrooms,
-                'max_guests' => $request->max_guests,
-                'user_id' => $user->user_id,
+            $validated = Validator::make($request->all(), [
+                'title' => 'required|string',
+                'description' => 'required|string',
+                'address' => 'required|string',
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+                'price_per_night' => 'required|numeric',
+                'num_bedrooms' => 'required|integer',
+                'num_bathrooms' => 'required|integer',
+                'max_guests' => 'required|integer',
+                'photos' => 'required|array',
+                'photos.*' => 'file|mimes:jpg,jpeg,png',
             ]);
 
-            if (!$listing->listing_id) {
-                throw new \Exception("No se pudo obtener el ID de la propiedad.");
+            if ($validated->fails()) {
+                return response()->json([
+                    'message' => 'Error en la validación de datos',
+                    'errors' => $validated->errors(),
+                    'status' => 400
+                ], 400);
             }
 
-            $uploadedUrls = [];
+            DB::beginTransaction();
 
-            foreach ($request->file('photos') as $photo) {
-                $uploadedUrl = $this->supabase->uploadImage($photo);
+            try {
 
-                if (!$uploadedUrl) {
-                    throw new \Exception("Error al subir una de las imágenes.");
-                }
-
-                DB::table('photos')->insert([
-                    'listing_id' => $listing->listing_id,
-                    'photo_url' => $uploadedUrl,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                $listing = Listings::create([
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'address' => $request->address,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'price_per_night' => $request->price_per_night,
+                    'num_bedrooms' => $request->num_bedrooms,
+                    'num_bathrooms' => $request->num_bathrooms,
+                    'max_guests' => $request->max_guests,
+                    'user_id' => $user->user_id,
                 ]);
 
-                $uploadedUrls[] = $uploadedUrl;
+                if (!$listing->listing_id) {
+                    throw new \Exception("No se pudo obtener el ID de la propiedad.");
+                }
+
+                $uploadedUrls = [];
+
+                foreach ($request->file('photos') as $photo) {
+                    $uploadedUrl = $this->supabase->uploadImage($photo);
+
+                    if (!$uploadedUrl) {
+                        throw new \Exception("Error al subir una de las imágenes.");
+                    }
+
+                    DB::table('photos')->insert([
+                        'listing_id' => $listing->listing_id,
+                        'photo_url' => $uploadedUrl,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $uploadedUrls[] = $uploadedUrl;
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Propiedad creada exitosamente',
+                    'listing' => $listing,
+                    'photos' => $uploadedUrls,
+                ], 201);
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Error al crear la propiedad',
+                    'error' => $e->getMessage(),
+                    'status' => 500
+                ], 500);
             }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Propiedad creada exitosamente',
-                'listing' => $listing,
-                'photos' => $uploadedUrls,
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'message' => 'Error al crear la propiedad',
-                'error' => $e->getMessage(),
-                'status' => 500
-            ], 500);
         }
-    }
 
 
     public function show($id)
