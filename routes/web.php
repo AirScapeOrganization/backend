@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::post('/user', [UserController::class, 'store']);
 Route::get('/listings', [ListingsController::class, 'index']);
+Route::get('/listings/{id}', [ListingsController::class, 'show']);
 Route::post('/login', [AuthController::class, 'login']);
+
 
 // Private routes
 Route::middleware([AuthenticateJWT::class])->group(function () {
@@ -25,7 +27,6 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
     // Listings
-    Route::get('/listings/{id}', [ListingsController::class, 'show']);
     Route::post('/listings', [ListingsController::class, 'store']);
     Route::put('/listings/{id}', [ListingsController::class, 'edit']);
 
@@ -41,6 +42,8 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     //Bookings
     Route::get('/bookings', [BookingsController::class, 'show']);
     Route::post('/bookings', [BookingsController::class, 'store']);
+
+    Route::post('/photos', [PhotosController::class, 'store']);
 });
 
 Route::post('invoice', [InvoiceController::class, 'store']);

@@ -11,12 +11,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ListingsController extends Controller
 {
-    protected $supabase;
-
-    public function __construct(SupabaseService $supabase)
-    {
-        $this->supabase = $supabase;
-    }
 
     public function index()
     {
@@ -67,7 +61,7 @@ class ListingsController extends Controller
             'num_bathrooms' => 'required|integer',
             'max_guests' => 'required|integer',
             'photos' => 'required|array',
-            'photos.*' => 'file|mimes:jpg,jpeg,png,webp',
+            'photos.*' => 'url',
         ]);
 
         if ($validated->fails()) {
@@ -81,7 +75,6 @@ class ListingsController extends Controller
         DB::beginTransaction();
 
         try {
-
             $listing = Listings::create([
                 'title' => $request->title,
                 'description' => $request->description,
@@ -100,22 +93,15 @@ class ListingsController extends Controller
             }
 
             $uploadedUrls = [];
-
-            foreach ($request->file('photos') as $photo) {
-                $uploadedUrl = $this->supabase->uploadImage($photo, $user->user_id, $listing->listing_id);
-
-                if (!$uploadedUrl) {
-                    throw new \Exception("Error uploading one of the images");
-                }
-
+            foreach ($request->input('photos') as $photoUrl) {
                 DB::table('photos')->insert([
                     'listing_id' => $listing->listing_id,
-                    'photo_url' => $uploadedUrl,
+                    'photo_url' => $photoUrl,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
 
-                $uploadedUrls[] = $uploadedUrl;
+                $uploadedUrls[] = $photoUrl;
             }
 
             DB::commit();
@@ -135,6 +121,7 @@ class ListingsController extends Controller
             ], 500);
         }
     }
+
 
     public function show($id)
     {
