@@ -22,7 +22,7 @@ class SupabaseService
         $this->bucket = env('SUPABASE_BUCKET', 'photos');
     }
 
-    public function uploadImage($file)
+    public function uploadSingleImage($file, $user_id)
     {
         try {
             if ($file instanceof \Illuminate\Http\UploadedFile) {
@@ -33,36 +33,24 @@ class SupabaseService
                 throw new \Exception('Formato de archivo no soportado.');
             }
 
-            Log::info('Archivo a subir:', [
-                'filename' => $fileName,
-                'mime_type' => $mimeType,
-                'bucket' => $this->bucket,
-            ]);
+            $filePath = "folder_user_{$user_id}/{$fileName}";
 
-
-            $response = $this->client->request('POST', "object/{$this->bucket}/{$fileName}", [
+            $response = $this->client->request('POST', "object/{$this->bucket}/{$filePath}", [
                 'headers' => [
                     'Content-Type' => $mimeType ?? 'application/octet-stream',
                 ],
                 'body' => $fileContent,
             ]);
 
-
-            Log::info('Respuesta de Supabase:', [
-                'status_code' => $response->getStatusCode(),
-                'body' => $response->getBody()->getContents(),
-            ]);
-
-
             if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
-                $uploadedUrl = env('SUPABASE_URL') . "/storage/v1/object/public/{$this->bucket}/{$fileName}";
+                $uploadedUrl = env('SUPABASE_URL') . "/storage/v1/object/public/{$this->bucket}/{$filePath}";
                 return $uploadedUrl;
             } else {
                 Log::error('Error al subir a Supabase: ' . $response->getBody()->getContents());
                 return null;
             }
         } catch (\Exception $e) {
-            Log::error('Error al subir a Supabase: ' . $e->getMessage());
+            Log::error('Error al subir a supabase: ' . $e->getMessage());
             return null;
         }
     }

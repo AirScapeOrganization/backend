@@ -10,17 +10,16 @@ class Bookings extends Model
     use HasFactory;
 
     protected $primaryKey = 'booking_id';
+    public $timestamps = true;
 
     protected $fillable = [
+        'listing_id',
+        'user_id',
         'start_date',
         'end_date',
         'total_price',
-        'listing_id',
-        'user_id',
         'created_at'
     ];
-
-    public $timestamps = false; 
 
     protected $casts = [
         'start_date' => 'date',

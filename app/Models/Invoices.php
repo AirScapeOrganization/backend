@@ -10,11 +10,11 @@ class Invoices extends Model
     use HasFactory;
 
     protected $primaryKey = 'invoice_id';
-    
+
     protected $fillable = [
         'booking_id',
         'date',
-        'time', 
+        'time',
         'tax_price',
         'price_gross',
         'price_net',
@@ -40,5 +40,4 @@ class Invoices extends Model
     {
         return $this->belongsTo(Bookings::class, 'booking_id');
     }
-
 }

@@ -1,68 +1,65 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
-use App\Services\SupabaseService;
 use App\Models\Photo;
+use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PhotosController extends Controller
 {
     protected $supabase;
 
-    public function __construct(SupabaseService $supabaseService)
+    public function __construct(SupabaseService $supabase)
     {
-        $this->supabase = $supabaseService;
+        $this->supabase = $supabase;
     }
 
     public function store(Request $request)
     {
-        // Validación de la imagen
+
         $validated = Validator::make($request->all(), [
-            'photo_url' => 'required|file|mimes:jpg,jpeg,png',
+            'photo' => 'required|file|mimes:jpg,jpeg,png,webp',
         ]);
 
         if ($validated->fails()) {
             return response()->json([
-                'mensaje' => 'Error en la validación de datos',
-                'error' => $validated->errors(),
+                'message' => 'Data validation error',
+                'errors' => $validated->errors(),
                 'status' => 400
             ], 400);
         }
 
-        try {
-            $uploadedUrl = $this->supabase->uploadImage($request->file('photo_url'));
+        $userId = Auth::id();
 
-            if (!$uploadedUrl) {
-                return response()->json([
-                    'mensaje' => 'Error al subir la imagen a Supabase',
-                    'status' => 500,
-                    'url' => $uploadedUrl,
-                ], 500);
-            }
-        } catch (\Exception $e) {
+        if (!$userId) {
             return response()->json([
-                'mensaje' => 'Error durante la subida de la imagen: ' . $e->getMessage(),
-                'status' => 500
-            ], 500);
+                'message' => 'Unauthorized',
+                'status' => 401
+            ], 401);
         }
 
-        // Guardar la URL en la base de datos
+        $photo = $request->file('photo');
+
         try {
-            $photo = new Photo();
-            $photo->photo_url = $uploadedUrl; // Guardar la URL generada
-            $photo->save();
+            $uploadedUrl = $this->supabase->uploadSingleImage($photo, $userId);
+
+            if (!$uploadedUrl) {
+                throw new \Exception("Error uploading the image");
+            }
 
             return response()->json([
-                'mensaje' => 'Imagen subida y URL guardada exitosamente',
-                'photo' => $photo,
+                'message' => 'Photo uploaded successfully',
+                'uploaded_url' => $uploadedUrl,
                 'status' => 201
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'mensaje' => 'Error al guardar la URL en la base de datos',
-                'error' => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'status' => 500
             ], 500);
         }

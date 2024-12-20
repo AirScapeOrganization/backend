@@ -9,7 +9,6 @@ class Listings extends Model
 {
     use HasFactory;
 
-
     protected $primaryKey = 'listing_id';
 
     public $timestamps = true;
@@ -61,6 +60,6 @@ class Listings extends Model
 
     public function photos()
     {
-        return $this->hasMany(Photo::class, 'listing_id'); // Asegúrate de que la relación esté correctamente configurada
+        return $this->hasMany(Photo::class, 'listing_id');
     }
 }

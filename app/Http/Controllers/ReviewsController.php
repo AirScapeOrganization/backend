@@ -6,131 +6,121 @@ use App\Models\Reviews;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-
-
 class ReviewsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        $Reviews = Reviews::all();
-    
+        $allReviews = Reviews::all();
         $data = [
-            'Reviews' => $Reviews,
+            'reviews' => $allReviews,
             'status' => 200,
         ];
-    
         return response()->json($data, 200);
     }
-    
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request)
     {
-        //
-    }
+        $userInfo = $request->user();
+        $user_id = $userInfo->user_id;
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function update(Request $request, $review_id)
-{
-    $reviewsValidator = Validator::make($request->all(), [
-        'listing_id' => 'required|exists:listings,listing_id', 
-        'rating' => 'required|integer|min:1|max:5', 
-        'comment' => 'nullable|string', 
-    ]);
-
-    if ($reviewsValidator->fails()) {
-        return response()->json([
-            'mensaje' => 'Error en la validación de datos',
-            'error' => $reviewsValidator->errors(),
-            'status' => 400
+        $validated = Validator::make($request->all(), [
+            'listing_id' => 'required|integer|exists:listings,listing_id',
+            'rating' => 'required|integer',
+            'comment' => 'required|string',
         ]);
-    }
 
-    $existingReview = Reviews::find($review_id);
+        if ($validated->fails()) {
+            return response()->json([
+                'message' => 'Data validation error',
+                'errors' => $validated->errors(),
+                'status' => 400
+            ], 400);
+        }
 
-    if (!$existingReview) {
-        return response()->json([
-            'mensaje' => 'Reseña no encontrada',
-            'status' => 404
+        $createReview = Reviews::create([
+            'listing_id' => $request->listing_id,
+            'user_id' => $user_id,
+            'rating' => $request->rating,
+            'comment' => $request->comment,
         ]);
-    }
-    $existingReview->listing_id = $request->listing_id;
-    $existingReview->rating = $request->rating;
-    $existingReview->comment = $request->comment;
-    $existingReview->created_at = now(); 
-    
-    if (!$existingReview->save()) {
+
         return response()->json([
-            'mensaje' => 'No se pudo actualizar la reseña',
-            'status' => 500
-        ]);
+            'message' => 'Review created successfully',
+            'review' => $createReview,
+        ], 201);
     }
-    return response()->json([
-        'mensaje' => 'Reseña actualizada correctamente',
-        'review' => $existingReview,
-        'status' => 200
-    ]);
-}
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-        $Reviews = Reviews::find($id);
-   
-        if (!$Reviews) {
+        $review_id = Reviews::find($id);
+
+        if (!$review_id) {
             return response()->json([
-                'mensaje' => 'Review no se pudo encontrar',
+                'mensaje' => 'Review not found',
                 'status' => 404,
             ], 404);
         }
         return response()->json([
-            'review' => $Reviews,
+            'review' => $review_id,
             'status' => 200,
         ], 200);
     }
-    
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, $review_id)
     {
-        //
-    }
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($review_id)
-{
-    $existingReview = Reviews::find($review_id);
-
-    if (!$existingReview) {
-        return response()->json([
-            'mensaje' => 'Reseña no encontrada',
-            'status' => 404
+        $validated = Validator::make($request->all(), [
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string',
         ]);
-    }
 
-    if ($existingReview->delete()) {
+        if ($validated->fails()) {
+            return response()->json([
+                'mensaje' => 'Data validation error',
+                'error' => $validated->errors(),
+                'status' => 400
+            ]);
+        }
+
+        $updatedReview = Reviews::where('review_id', $review_id)
+            ->update([
+                'rating' => $request->rating,
+                'comment' => $request->comment,
+            ]);
+
+        if (!$updatedReview) {
+            return response()->json([
+                'mensaje' => 'Failed to update review',
+                'status' => 500,
+            ]);
+        }
+
         return response()->json([
-            'mensaje' => 'Reseña eliminada correctamente',
+            'mensaje' => 'Review updated successfully',
             'status' => 200
         ]);
     }
-    return response()->json([
-        'mensaje' => 'No se pudo eliminar la reseña',
-        'status' => 500
-    ]);
-}
 
+    public function destroy($review_id)
+    {
+        $existingReview = Reviews::find($review_id);
+
+        if (!$existingReview) {
+            return response()->json([
+                'mensaje' => 'Review not found',
+                'status' => 404
+            ]);
+        }
+
+        if ($existingReview->delete()) {
+            return response()->json([
+                'mensaje' => 'Review deleted successfully',
+                'status' => 200
+            ]);
+        }
+        return response()->json([
+            'mensaje' => 'Could not delete review',
+            'status' => 500
+        ]);
+    }
 }

@@ -8,21 +8,12 @@ use App\Models\Photo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
-
 
 class ListingsController extends Controller
 {
-    protected $supabase;
-
-    public function __construct(SupabaseService $supabase)
-    {
-        $this->supabase = $supabase;
-    }
 
     public function index()
     {
-
         $listings = Listings::with('mainPhoto')->get();
 
         if ($listings->isEmpty()) {
@@ -49,96 +40,87 @@ class ListingsController extends Controller
         return response()->json(['properties' => $formattedListings, 'status' => 200]);
     }
 
-
         public function store(Request $request)
         {
             $user = $request->user();
 
-            if ($user->is_owner !== 1) {
-                return response()->json([
-                    'message' => 'No tienes permisos para crear una propiedad'
-                ], 403);
-            }
+        if ($user->is_owner !== 1) {
+            return response()->json([
+                'message' => 'You do not have permissions to create a property'
+            ], 403);
+        }
 
-            $validated = Validator::make($request->all(), [
-                'title' => 'required|string',
-                'description' => 'required|string',
-                'address' => 'required|string',
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
-                'price_per_night' => 'required|numeric',
-                'num_bedrooms' => 'required|integer',
-                'num_bathrooms' => 'required|integer',
-                'max_guests' => 'required|integer',
-                'photos' => 'required|array',
-                'photos.*' => 'file|mimes:jpg,jpeg,png',
-            ]);
+        $validated = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'address' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'price_per_night' => 'required|numeric',
+            'num_bedrooms' => 'required|integer',
+            'num_bathrooms' => 'required|integer',
+            'max_guests' => 'required|integer',
+            'photos' => 'required|array',
+            'photos.*' => 'url',
+        ]);
 
-            if ($validated->fails()) {
-                return response()->json([
-                    'message' => 'Error en la validación de datos',
-                    'errors' => $validated->errors(),
-                    'status' => 400
-                ], 400);
-            }
+        if ($validated->fails()) {
+            return response()->json([
+                'message' => 'Data validation error',
+                'errors' => $validated->errors(),
+                'status' => 400
+            ], 400);
+        }
 
             DB::beginTransaction();
 
-            try {
+        try {
+            $listing = Listings::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'price_per_night' => $request->price_per_night,
+                'num_bedrooms' => $request->num_bedrooms,
+                'num_bathrooms' => $request->num_bathrooms,
+                'max_guests' => $request->max_guests,
+                'user_id' => $user->user_id,
+            ]);
 
-                $listing = Listings::create([
-                    'title' => $request->title,
-                    'description' => $request->description,
-                    'address' => $request->address,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                    'price_per_night' => $request->price_per_night,
-                    'num_bedrooms' => $request->num_bedrooms,
-                    'num_bathrooms' => $request->num_bathrooms,
-                    'max_guests' => $request->max_guests,
-                    'user_id' => $user->user_id,
+            if (!$listing->listing_id) {
+                throw new \Exception("Could not get property ID");
+            }
+
+            $uploadedUrls = [];
+            foreach ($request->input('photos') as $photoUrl) {
+                DB::table('photos')->insert([
+                    'listing_id' => $listing->listing_id,
+                    'photo_url' => $photoUrl,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
-                if (!$listing->listing_id) {
-                    throw new \Exception("No se pudo obtener el ID de la propiedad.");
-                }
-
-                $uploadedUrls = [];
-
-                foreach ($request->file('photos') as $photo) {
-                    $uploadedUrl = $this->supabase->uploadImage($photo);
-
-                    if (!$uploadedUrl) {
-                        throw new \Exception("Error al subir una de las imágenes.");
-                    }
-
-                    DB::table('photos')->insert([
-                        'listing_id' => $listing->listing_id,
-                        'photo_url' => $uploadedUrl,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    $uploadedUrls[] = $uploadedUrl;
-                }
+                $uploadedUrls[] = $photoUrl;
+            }
 
                 DB::commit();
 
-                return response()->json([
-                    'message' => 'Propiedad creada exitosamente',
-                    'listing' => $listing,
-                    'photos' => $uploadedUrls,
-                ], 201);
-            } catch (\Exception $e) {
-                DB::rollBack();
+            return response()->json([
+                'message' => 'Property created successfully',
+                'listing' => $listing,
+                'photos' => $uploadedUrls,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-                return response()->json([
-                    'message' => 'Error al crear la propiedad',
-                    'error' => $e->getMessage(),
-                    'status' => 500
-                ], 500);
-            }
+            return response()->json([
+                'message' => 'Error creating property',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
         }
+    }
 
 
     public function show($id)
@@ -149,26 +131,26 @@ class ListingsController extends Controller
             return response()->json(['message' => 'Listing not found'], 404);
         }
 
+        $photos = $listing->photos->map(function ($photo) {
+            unset($photo->listing_id, $photo->created_at, $photo->updated_at);
+            return $photo;
+        });
+
         return response()->json([
-            'listing' => [
-                'id' => $listing->listing_id,
-                'title' => $listing->title,
-                'description' => $listing->description,
-                'address' => $listing->address,
-                'latitude' => $listing->latitude,
-                'longitude' => $listing->longitude,
-                'price_per_night' => $listing->price_per_night,
-                'num_bedrooms' => $listing->num_bedrooms,
-                'num_bathrooms' => $listing->num_bathrooms,
-                'max_guests' => $listing->max_guests,
-                'user_id' => $listing->user_id,
-            ],
-            'photos' => $listing->photos,
+            'id' => $listing->listing_id,
+            'title' => $listing->title,
+            'description' => $listing->description,
+            'address' => $listing->address,
+            'latitude' => $listing->latitude,
+            'longitude' => $listing->longitude,
+            'price_per_night' => $listing->price_per_night,
+            'num_bedrooms' => $listing->num_bedrooms,
+            'num_bathrooms' => $listing->num_bathrooms,
+            'max_guests' => $listing->max_guests,
+            'user_id' => $listing->user_id,
+            'photos' => $photos,
         ], 200);
     }
-
-
-
 
     public function edit(Request $request, string $id)
     {
@@ -186,7 +168,7 @@ class ListingsController extends Controller
 
         if ($listings->fails()) {
             return response()->json([
-                'mensaje' => 'Error en la validación de datos',
+                'mensaje' => 'Data validation error',
                 'error' => $listings->errors(),
                 'status' => 400
             ]);
@@ -196,7 +178,7 @@ class ListingsController extends Controller
 
         if (!$listing) {
             return response()->json([
-                'mensaje' => 'Propiedad no encontrada',
+                'mensaje' => 'Property not found',
                 'status' => 404
             ]);
         }
@@ -213,13 +195,13 @@ class ListingsController extends Controller
 
         if (!$listing->save()) {
             return response()->json([
-                'mensaje' => 'No se pudo actualizar la propiedad',
+                'mensaje' => 'Could not update property',
                 'status' => 500
             ]);
         }
 
         return response()->json([
-            'mensaje' => 'Propiedad actualizada correctamente',
+            'mensaje' => 'Property updated successfully',
             'status' => 200
         ]);
     }
