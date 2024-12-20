@@ -42,8 +42,6 @@ class ListingsController extends Controller
 
     public function store(Request $request)
     {
-        $user = $request->user();
-        
         $validated = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -56,14 +54,14 @@ class ListingsController extends Controller
             'max_guests' => 'required|integer',
             'photos' => 'required|array',
             'photos.*' => 'url',
+            'user_id' => 'required|integer', // Agregamos validación para el user_id
         ]);
-
 
         if ($validated->fails()) {
             return response()->json([
                 'message' => 'Data validation error',
                 'errors' => $validated->errors(),
-                'status' => 400
+                'status' => 400,
             ], 400);
         }
 
@@ -80,23 +78,16 @@ class ListingsController extends Controller
                 'num_bedrooms' => $request->num_bedrooms,
                 'num_bathrooms' => $request->num_bathrooms,
                 'max_guests' => $request->max_guests,
-                'user_id' => $user->user_id,
+                'user_id' => $request->user_id,
             ]);
 
-            if (!$listing->listing_id) {
-                throw new \Exception("Could not get property ID");
-            }
-
-            $uploadedUrls = [];
-            foreach ($request->input('photos') as $photoUrl) {
+            foreach ($request->photos as $photoUrl) {
                 DB::table('photos')->insert([
                     'listing_id' => $listing->listing_id,
                     'photo_url' => $photoUrl,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
-                $uploadedUrls[] = $photoUrl;
             }
 
             DB::commit();
@@ -104,7 +95,6 @@ class ListingsController extends Controller
             return response()->json([
                 'message' => 'Property created successfully',
                 'listing' => $listing,
-                'photos' => $uploadedUrls,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -112,11 +102,10 @@ class ListingsController extends Controller
             return response()->json([
                 'message' => 'Error creating property',
                 'error' => $e->getMessage(),
-                'status' => 500
+                'status' => 500,
             ], 500);
         }
     }
-
 
     public function show($id)
     {
