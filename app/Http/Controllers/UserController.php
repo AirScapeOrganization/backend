@@ -87,9 +87,9 @@ class UserController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->user_id . ',user_id',
-            'password' => 'nullable|string|min:6',
-            'profile_picture' => 'nullable|string',
-            'bio' => 'nullable|string',
+            'password' => 'required|string|min:6',
+            'profile_picture' => 'string',
+            'bio' => 'required|string',
         ]);
 
         $user->username = $validated['username'];

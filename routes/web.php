@@ -47,5 +47,6 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::middleware([ValidateTokenOwner::class])->group(function () {
         Route::post('/listings', [ListingsController::class, 'store']);
         Route::post('/photos', [PhotosController::class, 'store']);
+        Route::post('/update-profile-picture', [PhotosController::class, 'uploadProfilePicture']);
     });
 });

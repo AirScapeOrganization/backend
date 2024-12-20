@@ -64,4 +64,59 @@ class PhotosController extends Controller
             'status' => 400
         ], 400);
     }
+
+    public function uploadProfilePicture(Request $request)
+    {
+        $validated = Validator::make($request->all(), [
+            'photo' => 'required|file|mimes:jpg,jpeg,png,webp',
+        ]);
+
+        if ($validated->fails()) {
+            return response()->json([
+                'message' => 'Data validation error',
+                'errors' => $validated->errors(),
+                'status' => 400
+            ], 400);
+        }
+
+        $token = $request->header('Authorization');
+        $token = str_replace('Bearer ', '', $token);
+
+        try {
+            $decoded = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
+            $userId = $decoded->sub;
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Invalid or expired token',
+                'status' => 401
+            ], 401);
+        }
+        $photo = $request->file('photo');
+
+        if ($photo) {
+            try {
+
+                $uploadedUrl = $this->supabase->uploadProfilePicture($photo, $userId);
+                if (!$uploadedUrl) {
+                    throw new \Exception("Error uploading the profile picture");
+                }
+
+                return response()->json([
+                    'message' => 'Photo uploaded successfully',
+                    'uploaded_url' => $uploadedUrl,
+                    'status' => 201
+                ], 201);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'status' => 500
+                ], 500);
+            }
+        }
+
+        return response()->json([
+            'message' => 'No photo uploaded',
+            'status' => 400
+        ], 400);
+    }
 }
