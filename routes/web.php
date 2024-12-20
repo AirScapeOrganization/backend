@@ -9,6 +9,7 @@ use App\Http\Controllers\PhotosController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AuthenticateJWT;
+use App\Http\Middleware\ValidateTokenOwner;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -27,7 +28,6 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
     // Listings
-    Route::post('/listings', [ListingsController::class, 'store']);
     Route::put('/listings/{id}', [ListingsController::class, 'edit']);
 
     //Reviews
@@ -43,7 +43,9 @@ Route::middleware([AuthenticateJWT::class])->group(function () {
     Route::get('/bookings', [BookingsController::class, 'show']);
     Route::post('/bookings', [BookingsController::class, 'store']);
 
-    Route::post('/photos', [PhotosController::class, 'store']);
-});
 
-Route::post('invoice', [InvoiceController::class, 'store']);
+    Route::middleware([ValidateTokenOwner::class])->group(function () {
+        Route::post('/listings', [ListingsController::class, 'store']);
+        Route::post('/photos', [PhotosController::class, 'store']);
+    });
+});

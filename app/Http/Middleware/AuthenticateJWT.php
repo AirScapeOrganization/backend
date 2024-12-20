@@ -25,12 +25,12 @@ class AuthenticateJWT
                 return response()->json(['message' => 'Token does not contain user ID'], 401);
             }
 
-
             if (!isset($decoded->is_owner)) {
                 return response()->json(['message' => 'Token does not contain property "is_owner"'], 401);
             }
 
             $request->user = $decoded;
+            
         } catch (\Exception $e) {
             return response()->json(['message' => 'Invalid token'], 401);
         }

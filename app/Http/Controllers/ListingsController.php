@@ -43,13 +43,7 @@ class ListingsController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-
-        if ($user->is_owner !== 1) {
-            return response()->json([
-                'message' => 'You do not have permissions to create a property'
-            ], 403);
-        }
-
+        
         $validated = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -63,6 +57,7 @@ class ListingsController extends Controller
             'photos' => 'required|array',
             'photos.*' => 'url',
         ]);
+
 
         if ($validated->fails()) {
             return response()->json([

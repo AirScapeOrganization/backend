@@ -22,7 +22,7 @@ class SupabaseService
         $this->bucket = env('SUPABASE_BUCKET', 'photos');
     }
 
-    public function uploadSingleImage($file, $user_id)
+    public function uploadImage($file, $user_id)
     {
         try {
             if ($file instanceof \Illuminate\Http\UploadedFile) {
